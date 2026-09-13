@@ -11,5 +11,22 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: logistics_mlflow
+    ports:
+      - target: 5000
+        published: 5005
+        protocol: tcp
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+      --serve-artifacts
+      --host 0.0.0.0
+    volumes:
+      - mlflow_data:/mlflow
+
 volumes:
   pgdata:
+  mlflow_data:
