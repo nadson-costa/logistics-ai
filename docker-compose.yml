@@ -12,8 +12,9 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    image: ghcr.io/mlflow/mlflow:v2.15.1
     container_name: logistics_mlflow
+    hostname: mlflow
     ports:
       - target: 5000
         published: 5005
@@ -26,6 +27,17 @@ services:
       --host 0.0.0.0
     volumes:
       - mlflow_data:/mlflow
+
+  api:
+    build: .
+    container_name: logistics_api
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    depends_on:
+      - mlflow
 
 volumes:
   pgdata:
