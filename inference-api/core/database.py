@@ -1,20 +1,13 @@
-import os
 import asyncpg
-from dotenv import load_dotenv
+from core.config import settings
 
-load_dotenv()
 
-DB_USER = os.getenv("POSTGRES_USER")
-DB_PASS = os.getenv("POSTGRES_PASSWORD")
-DB_HOST = os.getenv("POSTGRES_HOST")
-DB_PORT = os.getenv("POSTGRES_PORT")
-DB_NAME = os.getenv("POSTGRES_DB")
+async def create_pool() -> asyncpg.Pool:
+    return await asyncpg.create_pool(settings.database_url)
 
-DB_URL = f"postgresql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
-async def init_db():
-    conn = await asyncpg.connect(DB_URL)
-    try:
+async def init_db(pool: asyncpg.Pool):
+    async with pool.acquire() as conn:
         await conn.execute('''
             CREATE TABLE IF NOT EXISTS detection_alerts (
                 id SERIAL PRIMARY KEY,
@@ -25,6 +18,4 @@ async def init_db():
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
-        print("INFO: Tabela 'detection_alerts' verificada/criada com sucesso via .env.")
-    finally:
-        await conn.close()
+    print("INFO: Tabela 'detection_alerts' verificada/criada com sucesso.")
