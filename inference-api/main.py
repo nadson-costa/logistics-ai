@@ -7,6 +7,7 @@ from core.config import settings
 from core.database import create_pool, init_db
 from features.alerts.notifications.dispatcher import NotificationDispatcher
 from features.alerts.notifications.email_resend import ResendEmailChannel
+from features.alerts.notifications.sms_twilio import TwilioSMSChannel
 from features.alerts.repository import AlertRepository
 from features.alerts.router import router as alerts_router
 from features.alerts.worker import AlertWorker
@@ -35,6 +36,16 @@ async def lifespan(app: FastAPI):
             )
         )
 
+    if settings.twilio_account_sid and settings.twilio_auth_token and settings.twilio_recipient:
+        notification_channels.append(
+            TwilioSMSChannel(
+                account_sid=settings.twilio_account_sid,
+                auth_token=settings.twilio_auth_token,
+                sender=settings.twilio_sender,
+                recipient=settings.twilio_recipient,
+            )
+        )
+
     dispatcher = NotificationDispatcher(
         repository=app.state.alert_repository,
         channels=notification_channels,
@@ -47,6 +58,12 @@ async def lifespan(app: FastAPI):
 
     worker_task.cancel()
     dispatcher_task.cancel()
+
+    for channel in notification_channels:
+        close = getattr(channel, "close", None)
+        if close is not None:
+            await close()
+
     await app.state.db_pool.close()
 
 

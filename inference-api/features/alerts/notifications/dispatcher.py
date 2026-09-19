@@ -21,8 +21,6 @@ class NotificationDispatcher:
 
     @staticmethod
     def _now() -> datetime:
-        # naive, mas sempre UTC: a coluna created_at é TIMESTAMP (sem timezone),
-        # e o asyncpg rejeita comparar datetime "aware" com coluna "naive".
         return datetime.now(timezone.utc).replace(tzinfo=None)
 
     async def run(self):
