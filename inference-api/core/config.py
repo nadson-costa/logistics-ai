@@ -20,6 +20,17 @@ class Settings:
     postgres_port: str = os.getenv("POSTGRES_PORT")
     postgres_db: str = os.getenv("POSTGRES_DB")
 
+    notification_window_seconds: int = int(os.getenv("NOTIFICATION_WINDOW_SECONDS", "300"))
+
+    resend_api_key: str = os.getenv("RESEND_API_KEY", "")
+    notification_email_from: str = os.getenv("NOTIFICATION_EMAIL_FROM", "logistics-ai@nadson.dev")
+    notification_email_to: str = os.getenv("NOTIFICATION_EMAIL_TO", "")
+
+    twilio_account_sid: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    twilio_auth_token: str = os.getenv("TWILIO_AUTH_TOKEN", "")
+    twilio_sender: str = os.getenv("TWILIO_SENDER", "")
+    twilio_recipient: str = os.getenv("TWILIO_RECIPIENT", "")
+
     @property
     def database_url(self) -> str:
         return (
