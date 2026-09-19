@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 
 import asyncpg
@@ -59,3 +60,18 @@ class AlertRepository:
             )
 
         return list(rows), total
+
+    async def get_alert_stats_since(self, since: datetime) -> asyncpg.Record:
+        async with self.pool.acquire() as conn:
+            return await conn.fetchrow(
+                '''
+                    SELECT
+                        COUNT(*) AS total_alerts,
+                        AVG(confidence) AS avg_confidence,
+                        MIN(confidence) AS min_confidence,
+                        ARRAY_AGG(DISTINCT class_id) AS class_ids
+                    FROM detection_alerts
+                    WHERE created_at > $1
+                ''',
+                since,
+            )

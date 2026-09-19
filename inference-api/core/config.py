@@ -20,6 +20,11 @@ class Settings:
     postgres_port: str = os.getenv("POSTGRES_PORT")
     postgres_db: str = os.getenv("POSTGRES_DB")
 
+    resend_api_key: str = os.getenv("RESEND_API_KEY", "")
+    notification_email_from: str = os.getenv("NOTIFICATION_EMAIL_FROM", "logistics-ai@nadson.dev")
+    notification_email_to: str = os.getenv("NOTIFICATION_EMAIL_TO", "")
+    notification_window_seconds: int = int(os.getenv("NOTIFICATION_WINDOW_SECONDS", "300"))
+
     @property
     def database_url(self) -> str:
         return (
