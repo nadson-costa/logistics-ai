@@ -1,20 +1,33 @@
 import asyncio
-from fastapi import FastAPI
-from core.database import init_db
-from features.inspection.router import router as inspection_router
-from features.alerts.worker import AlertWorker
-from features.alerts.repository import AlertRepository
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Logistics AI", version="0.1.0")
+from fastapi import FastAPI
+
+from core.database import create_pool, init_db
+from features.alerts.repository import AlertRepository
+from features.alerts.worker import AlertWorker
+from features.inspection.router import router as inspection_router
+from features.inspection.service import InspectionService
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.db_pool = await create_pool()
+    await init_db(app.state.db_pool)
+
+    app.state.inspection_service = InspectionService()
+
+    repository = AlertRepository(app.state.db_pool)
+    worker = AlertWorker(repository)
+    worker_task = asyncio.create_task(worker.consume_events())
+
+    print("INFO: Aplicação iniciada com sucesso.")
+    yield
+
+    worker_task.cancel()
+    await app.state.db_pool.close()
+
+
+app = FastAPI(title="Logistics AI", version="0.1.0", lifespan=lifespan)
 
 app.include_router(inspection_router)
-
-@app.on_event("startup")
-async def startup_event():
-    await init_db()  
-
-    repository = AlertRepository()
-    worker = AlertWorker(repository)
-    
-    asyncio.create_task(worker.consume_events())
-    print("INFO: Aplicação iniciada com sucesso.")
