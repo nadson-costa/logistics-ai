@@ -1,21 +1,17 @@
-import os
-
 import mlflow
 import asyncio
+from core.config import settings
 from core.events import detection_queue
 from .repository import AlertRepository
-
-mlflow.set_tracking_uri("http://127.0.0.1:5005")
 
 class AlertWorker:
     def __init__(self, repository: AlertRepository):
         self.repository = repository
 
-
     def send_alert(self, event):
         try:
-            mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://mlflow:5000"))
-            mlflow.set_experiment("logistics-model-health")
+            mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
+            mlflow.set_experiment(settings.mlflow_experiment_name)
 
             with mlflow.start_run(run_name=f"alert_frame_{event.frame_index}"):
                 mlflow.log_metric("confidence_score", event.confidence)
