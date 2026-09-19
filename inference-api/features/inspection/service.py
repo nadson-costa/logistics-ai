@@ -4,13 +4,13 @@ import mlflow
 import os
 import time
 from ultralytics import YOLO
+from core.config import settings
 from .schemas import DetectionEvent
 
-MLFLOW_URL = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5005")
-mlflow.set_tracking_uri(MLFLOW_URL)
+mlflow.set_tracking_uri(settings.mlflow_tracking_uri)
 
 def get_production_model():
-    model_name = "YOLOv11-Logistics-Box"
+    model_name = settings.mlflow_model_name
     print(f"INFO: Conectando ao MLflow e buscando a última versão do {model_name}...")
     try:
         model_uri = f"models:/{model_name}/latest"
@@ -47,14 +47,14 @@ class InspectionService:
                     print("INFO: Fim do vídeo ou erro na leitura do quadro.")
                     break
 
-                if frame_count % 10 == 0:
+                if frame_count % settings.frame_sample_rate == 0:
                     results = self.model.predict(frame, imgsz=640, verbose=False)
 
                     for box in results[0].boxes:
                         confidence = float(box.conf[0])
                         class_id = int(box.cls[0])
 
-                        if confidence < 0.60:
+                        if confidence < settings.confidence_threshold:
                             detection_event = DetectionEvent(
                                 type="LOW_CONFIDENCE_ALERT",
                                 frame_index=frame_count,
