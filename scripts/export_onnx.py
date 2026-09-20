@@ -3,7 +3,7 @@ from ultralytics import YOLO
 def export_model():
     print("INFO: Carregando os pesos do modelo treinado")
 
-    model_path = "/opt/homebrew/runs/detect/mlruns/detector_caixas_v1-5/weights/best.pt"
+    model_path = "/opt/homebrew/runs/detect/mlruns/detector_caixas_v1-9/weights/best.pt"
     model = YOLO(model_path)
 
     print("INFO: Convertendo a arquitetura para o formato ONNX")
