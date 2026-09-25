@@ -2,7 +2,9 @@ import cv2
 import asyncio
 import mlflow
 import os
+import threading
 import time
+from typing import Optional
 from ultralytics import YOLO
 from core.config import settings
 from .schemas import DetectionEvent
@@ -30,6 +32,25 @@ class InspectionService:
             
         print(f"INFO: Carregando modelo de {model_path}")
         self.model = YOLO(model_path, task="detect")
+        self._defect_class_id = self._resolve_defect_class_id()
+
+        self._latest_frame: Optional[bytes] = None
+        self._latest_frame_lock = threading.Lock()
+
+    def _resolve_defect_class_id(self) -> Optional[int]:
+        for class_id, name in self.model.names.items():
+            if name == settings.defect_class_name:
+                return class_id
+        print(f"AVISO: Classe '{settings.defect_class_name}' não existe no modelo carregado — alertas de defeito desativados.")
+        return None
+
+    def get_latest_frame(self) -> Optional[bytes]:
+        with self._latest_frame_lock:
+            return self._latest_frame
+
+    def _set_latest_frame(self, frame_bytes: bytes) -> None:
+        with self._latest_frame_lock:
+            self._latest_frame = frame_bytes
 
     async def process_video_stream(self, video_path: str, event_queue: asyncio.Queue):
         loop = asyncio.get_running_loop()
@@ -50,13 +71,18 @@ class InspectionService:
                 if frame_count % settings.frame_sample_rate == 0:
                     results = self.model.predict(frame, imgsz=640, verbose=False)
 
+                    annotated_frame = results[0].plot()
+                    ok, encoded = cv2.imencode(".jpg", annotated_frame)
+                    if ok:
+                        self._set_latest_frame(encoded.tobytes())
+
                     for box in results[0].boxes:
                         confidence = float(box.conf[0])
                         class_id = int(box.cls[0])
 
-                        if confidence < settings.confidence_threshold:
+                        if class_id == self._defect_class_id:
                             detection_event = DetectionEvent(
-                                type="LOW_CONFIDENCE_ALERT",
+                                type="DEFECT_DETECTED",
                                 frame_index=frame_count,
                                 confidence=round(confidence, 3),
                                 class_id=class_id
