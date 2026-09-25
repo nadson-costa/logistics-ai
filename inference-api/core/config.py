@@ -12,7 +12,7 @@ class Settings:
 
     video_source_path: str = os.getenv("VIDEO_SOURCE_PATH", "data/raw/esteira.mp4")
     frame_sample_rate: int = int(os.getenv("FRAME_SAMPLE_RATE", "10"))
-    confidence_threshold: float = float(os.getenv("CONFIDENCE_THRESHOLD", "0.60"))
+    defect_class_name: str = os.getenv("DEFECT_CLASS_NAME", "caixa_danificada")
 
     postgres_user: str = os.getenv("POSTGRES_USER")
     postgres_password: str = os.getenv("POSTGRES_PASSWORD")
