@@ -17,5 +17,6 @@ mlruns/
 *.png
 *.pt
 *.onnx
+!docs/assets/*
 
 *.db
