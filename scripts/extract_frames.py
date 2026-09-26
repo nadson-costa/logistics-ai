@@ -1,7 +1,7 @@
 import cv2
 import os
 
-def extract_frames(video_path, output_dir):
+def extract_frames(video_path, output_dir, frame_interval=None):
     os.makedirs(output_dir, exist_ok=True)
     cap = cv2.VideoCapture(video_path)
 
@@ -12,9 +12,11 @@ def extract_frames(video_path, output_dir):
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     print(f"Vídeo carregado com sucesso. taxa de quadros: {fps} fps")
 
+    if frame_interval is None:
+        frame_interval = fps
+
     frame_count = 0
     save_count = 0
-    frame_interval = fps
 
     print("Iniciando extração...")
 
@@ -24,7 +26,7 @@ def extract_frames(video_path, output_dir):
             break
 
         if frame_count % frame_interval == 0:
-            filename = f"frame_{save_count:04d}.jpg"
+            filename = f"frame_{frame_count:04d}.jpg"
             output_path = os.path.join(output_dir, filename)
 
             cv2.imwrite(output_path, frame)

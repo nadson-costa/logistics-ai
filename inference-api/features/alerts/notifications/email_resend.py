@@ -13,10 +13,10 @@ class ResendEmailChannel:
         classes = ", ".join(str(class_id) for class_id in summary.class_ids)
 
         html = f"""
-            <h2>Alerta de baixa confiança — YOLOv11-Logistics-Box</h2>
+            <h2>Defeitos detectados — YOLOv11-Logistics-Box</h2>
             <p>Período: {summary.window_start:%d/%m %H:%M:%S} — {summary.window_end:%d/%m %H:%M:%S}</p>
             <ul>
-                <li>Total de alertas: {summary.total_alerts}</li>
+                <li>Total de defeitos: {summary.total_alerts}</li>
                 <li>Confiança média: {summary.avg_confidence:.3f}</li>
                 <li>Confiança mínima: {summary.min_confidence:.3f}</li>
                 <li>Classes envolvidas: {classes}</li>
@@ -26,6 +26,6 @@ class ResendEmailChannel:
         await resend.Emails.send_async({
             "from": self._from,
             "to": [self._to],
-            "subject": f"[Logistics AI] {summary.total_alerts} alertas de baixa confiança",
+            "subject": f"[Logistics AI] {summary.total_alerts} defeitos detectados",
             "html": html,
         })

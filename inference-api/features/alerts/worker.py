@@ -17,7 +17,7 @@ class AlertWorker:
                 mlflow.log_metric("confidence_score", event.confidence)
                 mlflow.log_param("class_id", event.class_id)
 
-            print(f"TRACKING: Alerta de Drift registrado no MLflow! (Confiança: {event.confidence})")
+            print(f"TRACKING: Defeito registrado no MLflow! (Confiança: {event.confidence})")
 
         except Exception as e:
             print(f"ERRO: Falha ao enviar métrica para o MLflow: {e}")
@@ -30,7 +30,7 @@ class AlertWorker:
             
             await self.repository.save_alert(event)
 
-            if event.type == "LOW_CONFIDENCE_ALERT":
+            if event.type == "DEFECT_DETECTED":
                 asyncio.create_task(asyncio.to_thread(self.send_alert, event))
             
             detection_queue.task_done()
